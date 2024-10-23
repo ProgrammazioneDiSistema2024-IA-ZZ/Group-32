@@ -1,96 +1,152 @@
-use winit::event::{ElementState, MouseButton, WindowEvent};
+use winit::window::Fullscreen;
+use winit::{
+    event::{Event, WindowEvent, ElementState, MouseButton},
+    event_loop::{ControlFlow, EventLoop},
+    window::WindowBuilder,
+};
 
-/// Struttura per rappresentare l'area di selezione.
-#[derive(Debug)]
+// Definizione per l'area di selezione del rettangolo
 pub struct SelectionArea {
-    pub start_pos: Option<(f32, f32)>, // Posizione iniziale (al primo clic)
-    pub end_pos: Option<(f32, f32)>,   // Posizione finale (al rilascio del mouse)
+    pub punto_a: bool,
+    pub punto_b: bool,
+    pub punto_c: bool,
+    pub punto_d: bool,
 }
 
 impl SelectionArea {
-    /// Crea una nuova area di selezione.
     pub fn new() -> Self {
-        SelectionArea {
-            start_pos: None,
-            end_pos: None,
-        }
-    }
-
-    /// Calcola e restituisce il rettangolo di selezione.
-    pub fn get_rect(&self) -> Option<((f32, f32), (f32, f32))> {
-        if let (Some(start), Some(end)) = (self.start_pos, self.end_pos) {
-            Some((start, end))
-        } else {
-            None
-        }
-    }
-
-    /// Aggiunge l'input del mouse per il primo clic.
-    pub fn start_selection(&mut self, x: f32, y: f32) {
-        self.start_pos = Some((x, y));
-        self.end_pos = None; // Reset dell'area finale
-        println!("Mouse cliccato: posizione iniziale ({}, {})", x, y);
-    }
-
-    /// Traccia il rettangolo durante il trascinamento.
-    pub fn update_selection(&mut self, x: f32, y: f32) {
-        if let Some((start_x, start_y)) = self.start_pos {
-            self.end_pos = Some((x, y));
-            println!("Trascinamento in corso: da ({}, {}) a ({}, {})", start_x, start_y, x, y);
-        }
-    }
-
-    /// Completa l'azione al rilascio del mouse.
-    pub fn confirm_selection(&mut self, x: f32, y: f32) {
-        if self.start_pos.is_some() {
-            self.end_pos = Some((x, y)); // Fissa la posizione finale
-            println!("Mouse rilasciato: selezione confermata da a ({}, {})", x, y);
+        Self {
+            punto_a: false,
+            punto_b: false,
+            punto_c: false,
+            punto_d: false,
         }
     }
 }
 
-/// Gestisce gli eventi del mouse per la selezione dell'area.
-pub fn handle_mouse_input(event: &WindowEvent, selection_area: &mut SelectionArea) {
-    match event {
-        // Rileva il primo clic del mouse
-        WindowEvent::MouseInput {
-            state: ElementState::Pressed,
-            button: MouseButton::Left,
-            ..
-        } => {
-            if let Some(position) = get_cursor_position(event) {
-                println!("Evento: Mouse Pressed");
-                selection_area.start_selection(position.0, position.1);
-            }
-        }
+pub struct ConfirmationArea {
+    pub start_x: f64,
+    pub start_y: f64,
+    pub end_x: f64,
+    pub end_y: f64,
+    pub selecting: bool,
+}
 
-        // Tracciamento del rettangolo durante il trascinamento
-        WindowEvent::CursorMoved { position, .. } => {
-            println!("Evento: Mouse Moved to ({}, {})", position.x, position.y);
-            selection_area.update_selection(position.x as f32, position.y as f32);
+impl ConfirmationArea {
+    pub fn new() -> Self {
+        Self {
+            start_x: 0.0,
+            start_y: 0.0,
+            end_x: 0.0,
+            end_y: 0.0,
+            selecting: false,
         }
-
-        // Completa l'azione al rilascio del mouse
-        WindowEvent::MouseInput {
-            state: ElementState::Released,
-            button: MouseButton::Left,
-            ..
-        } => {
-            if let Some(position) = get_cursor_position(event) {
-                println!("Evento: Mouse Released");
-                selection_area.confirm_selection(position.0, position.1);
-            }
-        }
-
-        _ => {}
     }
 }
 
-/// Ottiene la posizione corrente del cursore dal WindowEvent
-fn get_cursor_position(event: &WindowEvent) -> Option<(f32, f32)> {
-    if let WindowEvent::CursorMoved { position, .. } = event {
-        Some((position.x as f32, position.y as f32))
-    } else {
-        None
-    }
+enum AppState {
+    Selection,
+    Confirmation,
+}
+
+pub fn start_mouse_tracking() {
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new()
+        .with_fullscreen(Some(Fullscreen::Borderless(None))) // Finestra a schermo intero
+        .with_visible(true)
+        .with_title("Backup Tool")
+        .build(&event_loop)
+        .unwrap();
+
+    let mut selection_area = SelectionArea::new();
+    let mut confirmation_area = ConfirmationArea::new();
+    let mut app_state = AppState::Selection;
+
+    event_loop.run(move |event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
+
+        match app_state {
+            AppState::Selection => {
+                if let Event::WindowEvent { event, .. } = event {
+                    match event {
+                        // Rileva il movimento del mouse per tracciare il rettangolo
+                        WindowEvent::CursorMoved { position, .. } => {
+                            if position.x >= 0.0 && position.x <= 20.0 && position.y >= 0.0 && position.y <= 20.0 {
+                                println!("PUNTO A TROVATO");
+                                selection_area.punto_a = true;
+                            }
+                            if position.x >= 0.0 && position.x <= 20.0 && position.y >= 2060.0 && position.y <= 2080.0 && selection_area.punto_a {
+                                println!("PUNTO B TROVATO");
+                                selection_area.punto_b = true;
+                            }
+                            if position.x >= 3580.0 && position.x <= 3600.0 && position.y >= 2060.0 && position.y <= 2080.0 && selection_area.punto_b {
+                                println!("PUNTO C TROVATO");
+                                selection_area.punto_c = true;
+                            }
+                            if position.x >= 3580.0 && position.x <= 3600.0 && position.y >= 0.0 && position.y <= 20.0 && selection_area.punto_c {
+                                println!("PUNTO D TROVATO");
+                                selection_area.punto_d = true;
+                                println!("Passaggio alla fase di conferma");
+                                app_state = AppState::Confirmation; // Passa alla fase di conferma
+                            }
+                            println!("Coordinate correnti: ({}, {})", position.x, position.y);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            AppState::Confirmation => {
+                if let Event::WindowEvent { event, .. } = event {
+                    match event {
+                        // Rileva il primo clic del mouse e imposta il primo vertice del rettangolo
+                        WindowEvent::MouseInput {
+                            state: ElementState::Pressed,
+                            button: MouseButton::Left,
+                            ..
+                        } => {
+                            if !confirmation_area.selecting {
+                                confirmation_area.selecting = true;
+                                println!("Mouse Pressed: Inizio selezione area rettangolare");
+                                confirmation_area.start_x = confirmation_area.end_x;
+                                confirmation_area.start_y = confirmation_area.end_y;
+                            }
+                        }
+
+                        // Rileva il movimento del mouse per tracciare il rettangolo
+                        WindowEvent::CursorMoved { position, .. } => {
+                            if confirmation_area.selecting {
+                                confirmation_area.end_x = position.x;
+                                confirmation_area.end_y = position.y;
+                                println!(
+                                    "Selezione in corso: ({}, {}) -> ({}, {})",
+                                    confirmation_area.start_x, confirmation_area.start_y,
+                                    confirmation_area.end_x, confirmation_area.end_y
+                                );
+                            }
+                        }
+
+                        // Rileva il rilascio del mouse per confermare l'area selezionata
+                        WindowEvent::MouseInput {
+                            state: ElementState::Released,
+                            button: MouseButton::Left,
+                            ..
+                        } => {
+                            if confirmation_area.selecting {
+                                confirmation_area.selecting = false;
+                                println!(
+                                    "Mouse Released: Area selezionata da ({}, {}) a ({}, {})",
+                                    confirmation_area.start_x, confirmation_area.start_y,
+                                    confirmation_area.end_x, confirmation_area.end_y
+                                );
+
+                                // Qui puoi procedere con il comando di backup
+                                println!("Backup avviato!");
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+    });
 }

@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 winit = "0.28"
+crossterm = "0.24"
