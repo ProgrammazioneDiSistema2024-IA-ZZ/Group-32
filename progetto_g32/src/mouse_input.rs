@@ -29,33 +29,6 @@ impl ScreenCorners {
     }
 }
 
-struct ConfirmationState {
-    is_confirming: bool,
-    start_x: f64,
-    start_y: f64,
-    end_x: f64,
-}
-
-impl ConfirmationState {
-    pub fn new() -> Self {
-        Self {
-            is_confirming: false,
-            start_x: 0.0,
-            start_y: 0.0,
-            end_x: 0.0,
-        }
-    }
-
-    pub fn check_minus_sign(&self) -> bool {
-        let threshold_distance = 100.0;
-        let y_tolerance = 20.0;
-
-        (self.end_x - self.start_x).abs() >= threshold_distance
-            && (self.start_y - self.end_x).abs() <= y_tolerance
-    }
-}
-
-
 // Variabili globali con Mutex per gestire l'accesso condiviso
 lazy_static::lazy_static! {
     static ref CORNERS: Mutex<ScreenCorners> = Mutex::new(ScreenCorners::new());
