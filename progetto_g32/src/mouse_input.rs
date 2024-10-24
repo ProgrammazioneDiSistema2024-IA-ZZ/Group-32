@@ -1,26 +1,24 @@
-use rdev::{listen, Event, EventType};
+use rdev::{listen, Button, Event, EventType};
 use std::sync::{Arc, Mutex};
-use crate::mouse_input_confirmation::backup_confirmation;
+use std::thread;
+use lazy_static::lazy_static;
 
-// Struttura per mantenere lo stato del rilevamento dei vertici
-struct ScreenCorners {
+
+#[derive(Debug, Copy, Clone)]
+struct Position {
+    x: f64,
+    y: f64,
+}
+
+#[derive(Debug, Default)]
+struct Corners {
     point_a: bool,
     point_b: bool,
     point_c: bool,
     point_d: bool,
 }
 
-impl ScreenCorners {
-    fn new() -> Self {
-        ScreenCorners {
-            point_a: false,
-            point_b: false,
-            point_c: false,
-            point_d: false,
-        }
-    }
-
-    // Reset dei vertici dopo il completamento del back-up
+impl Corners {
     fn reset(&mut self) {
         self.point_a = false;
         self.point_b = false;
@@ -29,23 +27,71 @@ impl ScreenCorners {
     }
 }
 
-// Variabili globali con Mutex per gestire l'accesso condiviso
-lazy_static::lazy_static! {
-    static ref CORNERS: Mutex<ScreenCorners> = Mutex::new(ScreenCorners::new());
-    static ref SCREEN_DIMENSIONS: (f64, f64) = (1800.0, 1080.0);
+lazy_static! {
+    static ref SCREEN_DIMENSIONS: (f64, f64) = (1800.0, 1080.0); // Dimensioni dello schermo
+    static ref CORNERS: Arc<Mutex<Corners>> = Arc::new(Mutex::new(Corners::default()));
+
+    static ref START_POSITION: Mutex<Option<Position>> = Mutex::new(None);
+    static ref END_POSITION: Mutex<Option<Position>> = Mutex::new(None);
+    static ref CURRENT_POSITION: Mutex<Option<Position>> = Mutex::new(None);
+    static ref IS_DRAWING: Mutex<bool> = Mutex::new(false);
 }
 
-pub fn main() {
-    // Avvia l'ascolto degli eventi del mouse
-    if let Err(error) = listen(handle_event) {
-        println!("Errore durante l'ascolto degli eventi: {:?}", error);
+// Questa è la funzione che gestisce il segno meno e ora la eseguiamo in un thread separato.
+pub fn track_minus_sign(event: Event) {
+    match event.event_type {
+        EventType::MouseMove { x, y } => {
+            // Aggiorna la posizione corrente del mouse durante il movimento
+            *CURRENT_POSITION.lock().unwrap() = Some(Position { x, y });
+
+        }
+        EventType::ButtonPress(Button::Left) => {
+            // Cattura la posizione iniziale al click del mouse
+            if let Some(position) = *CURRENT_POSITION.lock().unwrap() {
+                *START_POSITION.lock().unwrap() = Some(position);
+                *IS_DRAWING.lock().unwrap() = true;
+                println!("Inizio selezione: ({}, {})", position.x, position.y);
+            }
+        }
+        EventType::ButtonRelease(Button::Left) => {
+            // Cattura la posizione finale al rilascio del mouse
+            if let Some(position) = *CURRENT_POSITION.lock().unwrap() {
+                *END_POSITION.lock().unwrap() = Some(position);
+                *IS_DRAWING.lock().unwrap() = false;
+                println!("Fine selezione: ({}, {})", position.x, position.y);
+
+                // Controlla se il segno meno è stato tracciato
+                if let (Some(start), Some(end)) = (*START_POSITION.lock().unwrap(), *END_POSITION.lock().unwrap()) {
+                    if is_minus_sign(start.x, start.y, end.x, end.y) {
+                        println!("Segno meno tracciato correttamente!");
+                    } else {
+                        println!("Il segno tracciato non è un meno.");
+                    }
+                }
+            }
+        }
+        _ => (),
     }
 }
 
-// Funzione che gestisce gli eventi del mouse
+// Funzione per controllare se il movimento del mouse è un segno meno
+fn is_minus_sign(x1: f64, y1: f64, x2: f64, y2: f64) -> bool {
+    // Tolleranza per la deviazione verticale
+    let vertical_tolerance = 10.0; // Permette un po' di movimento verticale
+    let min_horizontal_distance = 50.0; // Distanza minima per considerarlo un segno meno
+
+    let horizontal_distance = (x2 - x1).abs();
+    let vertical_distance = (y2 - y1).abs();
+
+    // Controlla se il movimento è principalmente orizzontale e abbastanza lungo
+    horizontal_distance >= min_horizontal_distance && vertical_distance <= vertical_tolerance
+}
+
+// Questa è la funzione principale che gestisce gli eventi
 fn handle_event(event: Event) {
     let (screen_width, screen_height) = *SCREEN_DIMENSIONS;
     let mut corners = CORNERS.lock().unwrap(); // Acquisiamo il lock sul Mutex
+    let mut confirm_state = false;
 
     match event.event_type {
         EventType::MouseMove { x, y } => {
@@ -77,20 +123,27 @@ fn handle_event(event: Event) {
                 // Se tutti i punti sono stati trovati, avvia il backup
                 if corners.point_a && corners.point_b && corners.point_c && corners.point_d {
                     println!("Sequenza completata.");
-                    backup_confirmation();
+                    confirm_state = true;
                     corners.reset(); // Reset dello stato dei vertici
                 }
             }
         }
         _ => {}
     }
+
+    // Se la sequenza è completata, avvia il tracking del segno meno in un nuovo thread
+    if confirm_state {
+        thread::spawn(|| {
+            if let Err(err) = listen(track_minus_sign) {
+                eprintln!("Errore durante il tracciamento del segno meno: {:?}", err);
+            }
+        });
+    }
 }
 
-
-// Funzione di esempio per eseguire il backup
-pub fn backup_procedure() {
-    println!("Eseguo il backup...");
-    // Logica di backup qui
+pub fn main() {
+    // Esempio di ascolto eventi per il mouse
+    if let Err(err) = listen(handle_event) {
+        eprintln!("Errore nell'ascolto degli eventi: {:?}", err);
+    }
 }
-
-
