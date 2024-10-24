@@ -1,152 +1,122 @@
-use winit::window::Fullscreen;
-use winit::{
-    event::{Event, WindowEvent, ElementState, MouseButton},
-    event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
-};
+use rdev::{listen, Event, EventType};
+use std::sync::{Arc, Mutex};
+use crate::mouse_input_confirmation::{start_mouse_tracking};
 
-// Definizione per l'area di selezione del rettangolo
-pub struct SelectionArea {
-    pub punto_a: bool,
-    pub punto_b: bool,
-    pub punto_c: bool,
-    pub punto_d: bool,
+// Struttura per mantenere lo stato del rilevamento dei vertici
+struct ScreenCorners {
+    point_a: bool,
+    point_b: bool,
+    point_c: bool,
+    point_d: bool,
 }
 
-impl SelectionArea {
-    pub fn new() -> Self {
-        Self {
-            punto_a: false,
-            punto_b: false,
-            punto_c: false,
-            punto_d: false,
+impl ScreenCorners {
+    fn new() -> Self {
+        ScreenCorners {
+            point_a: false,
+            point_b: false,
+            point_c: false,
+            point_d: false,
         }
+    }
+
+    // Reset dei vertici dopo il completamento del back-up
+    fn reset(&mut self) {
+        self.point_a = false;
+        self.point_b = false;
+        self.point_c = false;
+        self.point_d = false;
     }
 }
 
-pub struct ConfirmationArea {
-    pub start_x: f64,
-    pub start_y: f64,
-    pub end_x: f64,
-    pub end_y: f64,
-    pub selecting: bool,
+struct ConfirmationState {
+    is_confirming: bool,
+    start_x: f64,
+    start_y: f64,
+    end_x: f64,
 }
 
-impl ConfirmationArea {
+impl ConfirmationState {
     pub fn new() -> Self {
         Self {
+            is_confirming: false,
             start_x: 0.0,
             start_y: 0.0,
             end_x: 0.0,
-            end_y: 0.0,
-            selecting: false,
         }
+    }
+
+    pub fn check_minus_sign(&self) -> bool {
+        let threshold_distance = 100.0;
+        let y_tolerance = 20.0;
+
+        (self.end_x - self.start_x).abs() >= threshold_distance
+            && (self.start_y - self.end_x).abs() <= y_tolerance
     }
 }
 
-enum AppState {
-    Selection,
-    Confirmation,
+
+// Variabili globali con Mutex per gestire l'accesso condiviso
+lazy_static::lazy_static! {
+    static ref CORNERS: Mutex<ScreenCorners> = Mutex::new(ScreenCorners::new());
+    static ref SCREEN_DIMENSIONS: (f64, f64) = (1800.0, 1080.0);
 }
 
-pub fn start_mouse_tracking() {
-    let event_loop = EventLoop::new();
-    let window = WindowBuilder::new()
-        .with_fullscreen(Some(Fullscreen::Borderless(None))) // Finestra a schermo intero
-        .with_visible(true)
-        .with_title("Backup Tool")
-        .build(&event_loop)
-        .unwrap();
+pub fn main() {
+    // Avvia l'ascolto degli eventi del mouse
+    if let Err(error) = listen(handle_event) {
+        println!("Errore durante l'ascolto degli eventi: {:?}", error);
+    }
+}
 
-    let mut selection_area = SelectionArea::new();
-    let mut confirmation_area = ConfirmationArea::new();
-    let mut app_state = AppState::Selection;
+// Funzione che gestisce gli eventi del mouse
+fn handle_event(event: Event) {
+    let (screen_width, screen_height) = *SCREEN_DIMENSIONS;
+    let mut corners = CORNERS.lock().unwrap(); // Acquisiamo il lock sul Mutex
 
-    event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Wait;
+    match event.event_type {
+        EventType::MouseMove { x, y } => {
+            let tolerance = 20.0;
 
-        match app_state {
-            AppState::Selection => {
-                if let Event::WindowEvent { event, .. } = event {
-                    match event {
-                        // Rileva il movimento del mouse per tracciare il rettangolo
-                        WindowEvent::CursorMoved { position, .. } => {
-                            if position.x >= 0.0 && position.x <= 20.0 && position.y >= 0.0 && position.y <= 20.0 {
-                                println!("PUNTO A TROVATO");
-                                selection_area.punto_a = true;
-                            }
-                            if position.x >= 0.0 && position.x <= 20.0 && position.y >= 2060.0 && position.y <= 2080.0 && selection_area.punto_a {
-                                println!("PUNTO B TROVATO");
-                                selection_area.punto_b = true;
-                            }
-                            if position.x >= 3580.0 && position.x <= 3600.0 && position.y >= 2060.0 && position.y <= 2080.0 && selection_area.punto_b {
-                                println!("PUNTO C TROVATO");
-                                selection_area.punto_c = true;
-                            }
-                            if position.x >= 3580.0 && position.x <= 3600.0 && position.y >= 0.0 && position.y <= 20.0 && selection_area.punto_c {
-                                println!("PUNTO D TROVATO");
-                                selection_area.punto_d = true;
-                                println!("Passaggio alla fase di conferma");
-                                app_state = AppState::Confirmation; // Passa alla fase di conferma
-                            }
-                            println!("Coordinate correnti: ({}, {})", position.x, position.y);
-                        }
-                        _ => {}
-                    }
-                }
+            // Controlla il primo vertice in alto a sinistra (A)
+            if (x <= tolerance && y <= tolerance) && !corners.point_a {
+                println!("PUNTO A (in alto a sinistra) trovato");
+                corners.point_a = true;
             }
-            AppState::Confirmation => {
-                if let Event::WindowEvent { event, .. } = event {
-                    match event {
-                        // Rileva il primo clic del mouse e imposta il primo vertice del rettangolo
-                        WindowEvent::MouseInput {
-                            state: ElementState::Pressed,
-                            button: MouseButton::Left,
-                            ..
-                        } => {
-                            if !confirmation_area.selecting {
-                                confirmation_area.selecting = true;
-                                println!("Mouse Pressed: Inizio selezione area rettangolare");
-                                confirmation_area.start_x = confirmation_area.end_x;
-                                confirmation_area.start_y = confirmation_area.end_y;
-                            }
-                        }
 
-                        // Rileva il movimento del mouse per tracciare il rettangolo
-                        WindowEvent::CursorMoved { position, .. } => {
-                            if confirmation_area.selecting {
-                                confirmation_area.end_x = position.x;
-                                confirmation_area.end_y = position.y;
-                                println!(
-                                    "Selezione in corso: ({}, {}) -> ({}, {})",
-                                    confirmation_area.start_x, confirmation_area.start_y,
-                                    confirmation_area.end_x, confirmation_area.end_y
-                                );
-                            }
-                        }
+            // Controlla il secondo vertice in basso a sinistra (B)
+            if (x <= tolerance && y >= screen_height - tolerance) && corners.point_a && !corners.point_b {
+                println!("PUNTO B (in basso a sinistra) trovato");
+                corners.point_b = true;
+            }
 
-                        // Rileva il rilascio del mouse per confermare l'area selezionata
-                        WindowEvent::MouseInput {
-                            state: ElementState::Released,
-                            button: MouseButton::Left,
-                            ..
-                        } => {
-                            if confirmation_area.selecting {
-                                confirmation_area.selecting = false;
-                                println!(
-                                    "Mouse Released: Area selezionata da ({}, {}) a ({}, {})",
-                                    confirmation_area.start_x, confirmation_area.start_y,
-                                    confirmation_area.end_x, confirmation_area.end_y
-                                );
+            // Controlla il terzo vertice in basso a destra (C)
+            if (x >= screen_width - tolerance && y >= screen_height - tolerance) && corners.point_b && !corners.point_c {
+                println!("PUNTO C (in basso a destra) trovato");
+                corners.point_c = true;
+            }
 
-                                // Qui puoi procedere con il comando di backup
-                                println!("Backup avviato!");
-                            }
-                        }
-                        _ => {}
-                    }
+            // Controlla l'ultimo vertice in alto a destra (D)
+            if (x >= screen_width - tolerance && y <= tolerance) && corners.point_c && !corners.point_d {
+                println!("PUNTO D (in alto a destra) trovato");
+                corners.point_d = true;
+
+                // Se tutti i punti sono stati trovati, avvia il backup
+                if corners.point_a && corners.point_b && corners.point_c && corners.point_d {
+                    println!("Sequenza completata.");
+                    start_mouse_tracking();
+                    corners.reset(); // Reset dello stato dei vertici
                 }
             }
         }
-    });
+        _ => {}
+    }
 }
+
+// Funzione di esempio per eseguire il backup
+pub fn backup_procedure() {
+    println!("Eseguo il backup...");
+    // Logica di backup qui
+}
+
+
