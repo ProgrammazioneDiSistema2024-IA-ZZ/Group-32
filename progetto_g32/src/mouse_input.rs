@@ -1,6 +1,6 @@
 use rdev::{listen, Event, EventType};
 use std::sync::{Arc, Mutex};
-use crate::mouse_input_confirmation::{start_mouse_tracking};
+use crate::mouse_input_confirmation::backup_confirmation;
 
 // Struttura per mantenere lo stato del rilevamento dei vertici
 struct ScreenCorners {
@@ -77,7 +77,7 @@ fn handle_event(event: Event) {
                 // Se tutti i punti sono stati trovati, avvia il backup
                 if corners.point_a && corners.point_b && corners.point_c && corners.point_d {
                     println!("Sequenza completata.");
-                    start_mouse_tracking();
+                    backup_confirmation();
                     corners.reset(); // Reset dello stato dei vertici
                 }
             }
@@ -85,6 +85,7 @@ fn handle_event(event: Event) {
         _ => {}
     }
 }
+
 
 // Funzione di esempio per eseguire il backup
 pub fn backup_procedure() {
