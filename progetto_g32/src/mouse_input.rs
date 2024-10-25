@@ -1,9 +1,11 @@
+// src/mouse_input.rs
 use rdev::{listen, Button, Event, EventType};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use lazy_static::lazy_static;
 use winit::event_loop::EventLoop;
 use winit::monitor::MonitorHandle;
+use crate::audio::play_sound; // Importa la funzione play_sound
 
 #[derive(Debug, Copy, Clone)]
 struct Position {
@@ -76,6 +78,7 @@ pub fn track_minus_sign(event: Event) {
                 if let (Some(start), Some(end)) = (*START_POSITION.lock().unwrap(), *END_POSITION.lock().unwrap()) {
                     if is_minus_sign(start.x, start.y, end.x, end.y) {
                         println!("Segno meno tracciato correttamente!");
+                        play_sound(); // Esegui il segnale audio qui
                     } else {
                         println!("Il segno tracciato non è un meno.");
                     }
@@ -148,3 +151,4 @@ pub fn main() {
         eprintln!("Errore nell'ascolto degli eventi: {:?}", err);
     }
 }
+
