@@ -5,7 +5,7 @@ use std::thread;
 use lazy_static::lazy_static;
 use winit::event_loop::EventLoop;
 use winit::monitor::MonitorHandle;
-use crate::audio::play_sound; // Importa la funzione play_sound
+use crate::audio::play_sound;
 
 #[derive(Debug, Copy, Clone)]
 struct Position {
@@ -36,28 +36,43 @@ lazy_static! {
     static ref END_POSITION: Mutex<Option<Position>> = Mutex::new(None);
     static ref CURRENT_POSITION: Mutex<Option<Position>> = Mutex::new(None);
     static ref IS_DRAWING: Mutex<bool> = Mutex::new(false);
+    static ref IS_TRACKING_MINUS: Mutex<bool> = Mutex::new(false);
+    static ref LAST_EVENT: Mutex<Option<EventType>> = Mutex::new(None);
 }
 
 fn get_screen_dimensions() -> (f64, f64) {
     let event_loop = EventLoop::new();
-    let monitor: Option<MonitorHandle> = event_loop.available_monitors().next();
+    let monitors: Vec<MonitorHandle> = event_loop.available_monitors().collect();
 
-    if let Some(monitor) = monitor {
+    // Stampa le dimensioni di tutti i monitor disponibili
+    for (i, monitor) in monitors.iter().enumerate() {
+        let size = monitor.size();
+        println!(
+            "Monitor {}: larghezza = {}, altezza = {}",
+            i, size.width, size.height
+        );
+    }
+
+    // Ritorna la dimensione del primo monitor disponibile
+    if let Some(monitor) = monitors.first() {
         let size = monitor.size();
         (size.width as f64, size.height as f64)
     } else {
-        //(1800.0, 1080.0) // Valori di fallback nel caso non sia disponibile il monitor
-        (0.0, 0.0)
+        (0.0, 0.0) // Valori di fallback
     }
 }
 
-// Inizializza SCREEN_DIMENSIONS con la dimensione dinamica
 lazy_static! {
     static ref SCREEN_DIMENSIONS: (f64, f64) = get_screen_dimensions();
 }
 
-// Resto del codice invariato, con SCREEN_DIMENSIONS che ora ha valori dinamici
 pub fn track_minus_sign(event: Event) {
+    let mut last_event = LAST_EVENT.lock().unwrap();
+    if *last_event == Some(event.event_type.clone()) {
+        return;
+    }
+    *last_event = Some(event.event_type.clone());
+
     match event.event_type {
         EventType::MouseMove { x, y } => {
             *CURRENT_POSITION.lock().unwrap() = Some(Position { x, y });
@@ -78,7 +93,7 @@ pub fn track_minus_sign(event: Event) {
                 if let (Some(start), Some(end)) = (*START_POSITION.lock().unwrap(), *END_POSITION.lock().unwrap()) {
                     if is_minus_sign(start.x, start.y, end.x, end.y) {
                         println!("Segno meno tracciato correttamente!");
-                        play_sound(); // Esegui il segnale audio qui
+                        play_sound();
                     } else {
                         println!("Il segno tracciato non è un meno.");
                     }
@@ -106,25 +121,29 @@ fn handle_event(event: Event) {
 
     match event.event_type {
         EventType::MouseMove { x, y } => {
-            let tolerance = 20.0;
+            let tolerance = 30.0; // Tolleranza per migliorare la precisione
 
+            // Angolo A (in alto a sinistra)
             if (x <= tolerance && y <= tolerance) && !corners.point_a {
-                println!("PUNTO A (in alto a sinistra) trovato");
+                println!("PUNTO A trovato: x={}, y={}", x, y);
                 corners.point_a = true;
             }
 
+            // Angolo B (in basso a sinistra)
             if (x <= tolerance && y >= screen_height - tolerance) && corners.point_a && !corners.point_b {
-                println!("PUNTO B (in basso a sinistra) trovato");
+                println!("PUNTO B trovato: x={}, y={}", x, y);
                 corners.point_b = true;
             }
 
+            // Angolo C (in basso a destra)
             if (x >= screen_width - tolerance && y >= screen_height - tolerance) && corners.point_b && !corners.point_c {
-                println!("PUNTO C (in basso a destra) trovato");
+                println!("PUNTO C trovato: x={}, y={}", x, y);
                 corners.point_c = true;
             }
 
+            // Angolo D (in alto a destra)
             if (x >= screen_width - tolerance && y <= tolerance) && corners.point_c && !corners.point_d {
-                println!("PUNTO D (in alto a destra) trovato");
+                println!("PUNTO D trovato: x={}, y={}", x, y);
                 corners.point_d = true;
 
                 if corners.point_a && corners.point_b && corners.point_c && corners.point_d {
@@ -138,11 +157,16 @@ fn handle_event(event: Event) {
     }
 
     if confirm_state {
-        thread::spawn(|| {
-            if let Err(err) = listen(track_minus_sign) {
-                eprintln!("Errore durante il tracciamento del segno meno: {:?}", err);
-            }
-        });
+        let mut is_tracking = IS_TRACKING_MINUS.lock().unwrap();
+        if !*is_tracking {
+            *is_tracking = true;
+            thread::spawn(|| {
+                if let Err(err) = listen(track_minus_sign) {
+                    eprintln!("Errore durante il tracciamento del segno meno: {:?}", err);
+                }
+                *IS_TRACKING_MINUS.lock().unwrap() = false;
+            });
+        }
     }
 }
 
@@ -151,4 +175,14 @@ pub fn main() {
         eprintln!("Errore nell'ascolto degli eventi: {:?}", err);
     }
 }
+
+
+
+
+
+
+
+
+
+
 
