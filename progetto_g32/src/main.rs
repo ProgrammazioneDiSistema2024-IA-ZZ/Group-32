@@ -1,4 +1,3 @@
-
 mod mouse_input;
 mod audio;
 
@@ -7,3 +6,4 @@ fn main() {
     mouse_input::main();
     //confirmation_main();
 }
+

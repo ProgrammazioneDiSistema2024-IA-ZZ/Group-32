@@ -3,8 +3,7 @@ use rdev::{listen, Button, Event, EventType};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use lazy_static::lazy_static;
-use winit::event_loop::EventLoop;
-use winit::monitor::MonitorHandle;
+use scrap::{Capturer, Display}; // Importa le librerie necessarie da scrap
 use crate::audio::play_sound;
 
 #[derive(Debug, Copy, Clone)]
@@ -41,24 +40,17 @@ lazy_static! {
 }
 
 fn get_screen_dimensions() -> (f64, f64) {
-    let event_loop = EventLoop::new();
-    let monitors: Vec<MonitorHandle> = event_loop.available_monitors().collect();
-
-    // Stampa le dimensioni di tutti i monitor disponibili
-    for (i, monitor) in monitors.iter().enumerate() {
-        let size = monitor.size();
-        println!(
-            "Monitor {}: larghezza = {}, altezza = {}",
-            i, size.width, size.height
-        );
-    }
-
-    // Ritorna la dimensione del primo monitor disponibile
-    if let Some(monitor) = monitors.first() {
-        let size = monitor.size();
-        (size.width as f64, size.height as f64)
-    } else {
-        (0.0, 0.0) // Valori di fallback
+    match Display::primary() {
+        Ok(display) => {
+            let width = display.width() as f64;
+            let height = display.height() as f64;
+            println!("Dimensioni del display: larghezza = {}, altezza = {}", width, height);
+            (width, height)
+        }
+        Err(err) => {
+            eprintln!("Errore nel recupero delle dimensioni dello schermo: {:?}", err);
+            (0.0, 0.0) // Valori di fallback
+        }
     }
 }
 
@@ -175,14 +167,3 @@ pub fn main() {
         eprintln!("Errore nell'ascolto degli eventi: {:?}", err);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
