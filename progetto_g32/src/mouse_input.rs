@@ -2,8 +2,7 @@ use rdev::{listen, Button, Event, EventType};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use lazy_static::lazy_static;
-use winit::event_loop::EventLoop;
-use winit::monitor::MonitorHandle;
+use scrap::{Capturer, Display};
 
 #[derive(Debug, Copy, Clone)]
 struct Position {
@@ -36,22 +35,21 @@ lazy_static! {
     static ref IS_DRAWING: Mutex<bool> = Mutex::new(false);
 }
 
-fn get_screen_dimensions() -> (f64, f64) {
-    let event_loop = EventLoop::new();
-    let monitor: Option<MonitorHandle> = event_loop.available_monitors().next();
-
-    if let Some(monitor) = monitor {
-        let size = monitor.size();
-        (size.width as f64, size.height as f64)
-    } else {
-        //(1800.0, 1080.0) // Valori di fallback nel caso non sia disponibile il monitor
-        (0.0, 0.0)
-    }
-}
-
 // Inizializza SCREEN_DIMENSIONS con la dimensione dinamica
 lazy_static! {
-    static ref SCREEN_DIMENSIONS: (f64, f64) = get_screen_dimensions();
+    static ref SCREEN_DIMENSIONS: Arc<Mutex<(f64, f64)>> = Arc::new(Mutex::new((0.0, 0.0)));
+}
+
+// Funzione che ottiene la risoluzione dinamicamente
+fn initialize_screen_dimensions() {
+    if let Some(display) = Display::primary().ok() {
+        let width = display.width() as f64;
+        let height = display.height() as f64;
+        *SCREEN_DIMENSIONS.lock().unwrap() = (width, height);
+        println!("Risoluzione dello schermo: {:?}", *SCREEN_DIMENSIONS.lock().unwrap());
+    } else {
+        eprintln!("Errore: impossibile ottenere la risoluzione dello schermo");
+    }
 }
 
 // Resto del codice invariato, con SCREEN_DIMENSIONS che ora ha valori dinamici
@@ -97,7 +95,7 @@ fn is_minus_sign(x1: f64, y1: f64, x2: f64, y2: f64) -> bool {
 }
 
 fn handle_event(event: Event) {
-    let (screen_width, screen_height) = *SCREEN_DIMENSIONS;
+    let (screen_width, screen_height) = *SCREEN_DIMENSIONS.lock().unwrap();
     let mut corners = CORNERS.lock().unwrap();
     let mut confirm_state = false;
 
@@ -144,6 +142,7 @@ fn handle_event(event: Event) {
 }
 
 pub fn main() {
+    initialize_screen_dimensions();
     if let Err(err) = listen(handle_event) {
         eprintln!("Errore nell'ascolto degli eventi: {:?}", err);
     }
