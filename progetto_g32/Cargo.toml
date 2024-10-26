@@ -6,4 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-winit = "0.30.5"
+sysinfo = "0.21"           # Per monitorare la CPU
+chrono = "0.4"             # Per ottenere timestamp nel log
+lazy_static = "1.4"         # Per inizializzare variabili globali come le dimensioni dello schermo

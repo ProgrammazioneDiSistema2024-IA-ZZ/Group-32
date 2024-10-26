@@ -7,7 +7,13 @@
     <cargoProject FILE="$PROJECT_DIR$/progetto_g32/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5eaba25a-fed2-4486-97c3-ce800a00cebe" name="Changes" comment="" />
+    <list default="true" id="5eaba25a-fed2-4486-97c3-ce800a00cebe" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/progetto_g32/src/backup.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/progetto_g32/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/progetto_g32/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/progetto_g32/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/progetto_g32/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/progetto_g32/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/progetto_g32/src/main.rs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -46,7 +52,8 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.rust.reset.selective.auto.import": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "feature/back-up",
+    "last_opened_file_path": "/Users/gianlucamaida/RustroverProjects/Group-32/progetto_g32/src",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -58,6 +65,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/progetto_g32/src" />
+    </key>
+  </component>
   <component name="RunManager" selected="Cargo.Run progetto_g32">
     <configuration name="Run progetto_g32" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="buildProfileId" value="dev" />
@@ -111,7 +123,7 @@
       <workItem from="1729775743824" duration="2356000" />
       <workItem from="1729781267193" duration="784000" />
       <workItem from="1729782559367" duration="976000" />
-      <workItem from="1729950625487" duration="3407000" />
+      <workItem from="1729950625487" duration="5074000" />
     </task>
     <servers />
   </component>
