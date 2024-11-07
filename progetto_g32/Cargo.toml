@@ -3,6 +3,15 @@ name = "progetto_g32"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "setup"
+path = "src/setup.rs"
+
+[[bin]]
+name = "uninstall"
+path = "src/uninstall.rs"
+
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -10,4 +19,5 @@ scrap = "0.5"
 rdev = "0.4"
 lazy_static = "1.5.0"
 rodio = "0.14.0"
+service-manager = "0.7.0"
 
