@@ -5,6 +5,9 @@ use std::thread;
 use lazy_static::lazy_static;
 use scrap::{Capturer, Display}; // Importa le librerie necessarie da scrap
 use crate::audio::play_sound;
+use crate::cpu_logger;
+use std::time::Instant; // Per calcolare il tempo di inizio del backup
+
 
 #[derive(Debug, Copy, Clone)]
 struct Position {
@@ -86,6 +89,19 @@ pub fn track_minus_sign(event: Event) {
                     if is_minus_sign(start.x, start.y, end.x, end.y) {
                         println!("Segno meno tracciato correttamente!");
                         play_sound();
+
+                        // Aggiungiamo la logica di backup
+                        let start_time = Instant::now();
+                        let total_size = 2048; // Esempio di dimensione di backup, da aggiornare con quella reale
+
+                        // Avvia il logging della CPU in un thread separato
+                        thread::spawn(|| {
+                            cpu_logger::log_cpu_usage();
+                        });
+
+                        // Esegui il backup (questo dovrebbe essere implementato dal tuo collega)
+                        // Una volta completato, logga le statistiche di backup
+                        cpu_logger::log_backup_stats(start_time, total_size);
                     } else {
                         println!("Il segno tracciato non è un meno.");
                     }
