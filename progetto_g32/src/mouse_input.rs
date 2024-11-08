@@ -2,9 +2,12 @@
 use rdev::{listen, Button, Event, EventType};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 use lazy_static::lazy_static;
 use scrap::{Capturer, Display}; // Importa le librerie necessarie da scrap
 use crate::audio::play_sound;
+use device_query::{DeviceQuery, DeviceState, MouseState};
+
 
 #[derive(Debug, Copy, Clone)]
 struct Position {
@@ -57,7 +60,7 @@ fn get_screen_dimensions() -> (f64, f64) {
 lazy_static! {
     static ref SCREEN_DIMENSIONS: (f64, f64) = get_screen_dimensions();
 }
-
+/*
 pub fn track_minus_sign(event: Event) {
     let mut last_event = LAST_EVENT.lock().unwrap();
     if *last_event == Some(event.event_type.clone()) {
@@ -68,6 +71,7 @@ pub fn track_minus_sign(event: Event) {
     match event.event_type {
         EventType::MouseMove { x, y } => {
             *CURRENT_POSITION.lock().unwrap() = Some(Position { x, y });
+            println!("coordinate correnti: ({}, {})", x, y);
         }
         EventType::ButtonPress(Button::Left) => {
             if let Some(position) = *CURRENT_POSITION.lock().unwrap() {
@@ -95,16 +99,72 @@ pub fn track_minus_sign(event: Event) {
         _ => (),
     }
 }
+*/
 
-fn is_minus_sign(x1: f64, y1: f64, x2: f64, y2: f64) -> bool {
-    let vertical_tolerance = 10.0;
-    let min_horizontal_distance = 50.0;
+// Funzione per tracciare il segno meno
+fn track_minus_sign(event: Event) {
+    let mut last_event = LAST_EVENT.lock().unwrap();
+    if *last_event == Some(event.event_type.clone()) {
+        return;
+    }
+    *last_event = Some(event.event_type.clone());
 
-    let horizontal_distance = (x2 - x1).abs();
-    let vertical_distance = (y2 - y1).abs();
+    match event.event_type {
+        EventType::MouseMove { x, y } => {
+            *CURRENT_POSITION.lock().unwrap() = Some(Position { x, y });
+            println!("Coordinate correnti monitorate manualmente: ({}, {})", x, y);
+        }
+        EventType::ButtonPress(Button::Left) => {
+            let position = get_mouse_position();
+            *CURRENT_POSITION.lock().unwrap() = Some(position);
+            *START_POSITION.lock().unwrap() = Some(position);
+            *IS_DRAWING.lock().unwrap() = true;
+            println!("Inizio selezione: ({}, {})", position.x, position.y);
 
-    horizontal_distance >= min_horizontal_distance && vertical_distance <= vertical_tolerance
+            // Avvia un thread per monitorare il movimento del cursore
+            thread::spawn(move || {
+                while *IS_DRAWING.lock().unwrap() {
+                    let position = get_mouse_position();
+                    *CURRENT_POSITION.lock().unwrap() = Some(position);
+                    println!("Coordinate correnti monitorate manualmente: ({}, {})", position.x, position.y);
+                    thread::sleep(Duration::from_millis(10)); // intervallo di controllo
+                }
+            });
+        }
+        EventType::ButtonRelease(Button::Left) => {
+            *IS_DRAWING.lock().unwrap() = false;
+            if let Some(position) = *CURRENT_POSITION.lock().unwrap() {
+                println!("Fine selezione: ({}, {})", position.x, position.y);
+                let Some(start) = *START_POSITION.lock().unwrap() else { todo!() };
+                if is_minus_sign(start.x, start.y, position.x, position.y) {
+                    println!("Segno meno tracciato correttamente!");
+                    play_sound();
+                } else {
+                    println!("Il segno tracciato non è un meno.");
+                }
+
+            }
+        }
+        _ => (),
+    }
 }
+// Funzione per ottenere la posizione del mouse usando device_query
+fn get_mouse_position() -> Position {
+    let device_state = DeviceState::new();
+    let mouse_state: MouseState = device_state.get_mouse();
+
+    Position{
+        x: mouse_state.coords.0 as f64,
+        y: mouse_state.coords.1 as f64,
+    }
+}
+// Funzione per verificare se la selezione è un segno meno (orizzontale)
+fn is_minus_sign(x1: f64, y1: f64, x2: f64, y2: f64) -> bool {
+    let delta_x = (x2 - x1).abs();
+    let delta_y = (y2 - y1).abs();
+    delta_y < 10.0 && delta_x > 50.0
+}
+
 
 fn handle_event(event: Event) {
     let (screen_width, screen_height) = *SCREEN_DIMENSIONS;
@@ -153,9 +213,9 @@ fn handle_event(event: Event) {
         if !*is_tracking {
             *is_tracking = true;
             thread::spawn(|| {
-                if let Err(err) = listen(track_minus_sign) {
-                    eprintln!("Errore durante il tracciamento del segno meno: {:?}", err);
-                }
+                listen(move |event| {
+                    track_minus_sign(event);
+                }).unwrap();
                 *IS_TRACKING_MINUS.lock().unwrap() = false;
             });
         }

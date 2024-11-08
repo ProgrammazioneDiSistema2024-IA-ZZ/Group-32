@@ -20,4 +20,5 @@ rdev = "0.4"
 lazy_static = "1.5.0"
 rodio = "0.14.0"
 service-manager = "0.7.0"
+device_query = "0.2"
 
