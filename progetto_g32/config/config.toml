@@ -1,0 +1,6 @@
+[source]
+path = "/path/to/source"
+file_types = ["txt", "jpg", "pdf"]
+
+[destination]
+path = "/path/to/usb-drive"

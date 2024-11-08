@@ -1,20 +1,17 @@
-use std::path::Path;
-use std::thread;
-
 mod backup;
-use backup::{execute_backup_with_logging, log_cpu_usage};
+
+use std::path::Path;
+use std::fs;
+use crate::backup::backup;
 
 fn main() {
-    // Configura i percorsi per la sorgente e destinazione del backup
-    let src = Path::new("/path/to/source");      // Cambia con il percorso sorgente reale
-    let dest = Path::new("/media/usb");          // Cambia con il percorso di destinazione su USB
-    let cpu_log_path = Path::new("/path/to/cpu_log.txt");
+    // Leggi il file di configurazione
+    let source = Path::new("/path/to/source");
+    let destination = Path::new("/path/to/usb-drive");
+    let file_types = vec!["txt", "jpg", "pdf"];
 
-    // Avvia il log del consumo CPU in un thread separato
-    let _cpu_log_handle = thread::spawn(move || log_cpu_usage(cpu_log_path));
-
-    // Esegui il backup con logging del tempo di CPU e dimensione totale
-    if let Err(e) = execute_backup_with_logging(src, dest, cpu_log_path) {
-        eprintln!("Errore durante il backup: {:?}", e);
+    // Avvia il backup
+    if let Err(e) = backup(source, destination, file_types) {
+        eprintln!("Error during backup: {}", e);
     }
 }

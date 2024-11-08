@@ -1,75 +1,40 @@
-use std::fs::{self, File};
-use std::io::{self, Write};
+use std::fs::{self, DirEntry};
 use std::path::Path;
-use std::time::{Duration, Instant};
-use sysinfo::{ProcessorExt, System, SystemExt};
-use std::thread;
+use std::time::{Instant, Duration};
+use std::io::{self, Write};
+use std::fs::File;
 
-pub fn backup_directory(src: &Path, dest: &Path) -> io::Result<u64> {
+pub fn backup(source: &Path, destination: &Path, file_types: Vec<&str>) -> io::Result<()> {
+    let start_time = Instant::now();
     let mut total_size = 0;
 
-    for entry in fs::read_dir(src)? {
+    for entry in fs::read_dir(source)? {
         let entry = entry?;
-        let file_type = entry.file_type()?;
-        let file_path = entry.path();
-        let dest_path = dest.join(entry.file_name());
+        let path = entry.path();
 
-        if file_type.is_dir() {
-            fs::create_dir_all(&dest_path)?;
-            total_size += backup_directory(&file_path, &dest_path)?;
-        } else if file_type.is_file() {
-            fs::copy(&file_path, &dest_path)?;
-            total_size += fs::metadata(&dest_path)?.len();
+        if path.is_file() {
+            if let Some(extension) = path.extension() {
+                if file_types.contains(&extension.to_str().unwrap()) {
+                    // Copia il file
+                    let dest_path = destination.join(path.file_name().unwrap());
+                    fs::copy(&path, dest_path)?;
+
+                    total_size += path.metadata()?.len();
+                }
+            }
+        } else if path.is_dir() {
+            // Backup delle cartelle (ricorsivo)
+            let dir_name = path.file_name().unwrap();
+            let new_dest = destination.join(dir_name);
+            fs::create_dir_all(&new_dest)?;
+            backup(&path, &new_dest, file_types.clone())?; // Ricorsiva per le sottocartelle
         }
     }
 
-    Ok(total_size)
-}
-
-pub fn log_cpu_usage(log_path: &Path) {
-    let mut system = System::new_all();
-    let mut log_file = File::create(log_path).expect("Impossibile creare il file di log del consumo CPU");
-
-    loop {
-        system.refresh_all();
-        let cpu_usage = system.global_processor_info().cpu_usage();
-        let timestamp = chrono::Utc::now().to_rfc3339();
-
-        writeln!(log_file, "{}: CPU Usage: {:.2}%", timestamp, cpu_usage).expect("Errore nella scrittura del log CPU");
-        log_file.flush().expect("Errore nel flush del file di log CPU");
-
-        thread::sleep(Duration::from_secs(120)); // Logga ogni 2 minuti
-    }
-}
-
-pub fn execute_backup_with_logging(src: &Path, dest: &Path, log_path: &Path) -> io::Result<()> {
-    // Controllo preliminare dei permessi di scrittura
-    if let Err(e) = check_write_permission(dest) {
-        eprintln!("Errore: File system di sola lettura o permessi insufficienti. Backup non possibile.");
-        return Err(e);
-    }
-
-    let start_time = Instant::now();
-    let total_size = backup_directory(src, dest)?;
-    let elapsed_time = start_time.elapsed().as_secs();
-
-    // Scrive il log del backup
-    let mut log_file = File::create(log_path)?;
-    writeln!(
-        log_file,
-        "Backup completato: {} bytes copiati in {} secondi",
-        total_size, elapsed_time
-    )?;
+    let duration = start_time.elapsed();
+    let log_file = File::create(destination.join("backup_log.txt"))?;
+    writeln!(log_file, "Backup completed in {:?} with {} bytes copied.", duration, total_size)?;
+    writeln!(log_file, "Total time spent on CPU: {:?}", duration)?;
 
     Ok(())
 }
-
-pub fn check_write_permission(dest: &Path) -> io::Result<()> {
-    let test_path = dest.join("test_permission.txt");
-    let result = File::create(&test_path).and_then(|mut file| file.write_all(b"test"));
-    fs::remove_file(test_path).ok(); // Rimuove il file di test se creato
-    result
-}
-
-
-
