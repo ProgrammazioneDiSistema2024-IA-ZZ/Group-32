@@ -40,6 +40,7 @@ lazy_static! {
     static ref IS_DRAWING: Mutex<bool> = Mutex::new(false);
     static ref IS_TRACKING_MINUS: Mutex<bool> = Mutex::new(false);
     static ref LAST_EVENT: Mutex<Option<EventType>> = Mutex::new(None);
+    static ref SCREEN_DIMENSIONS: (f64, f64) = get_screen_dimensions();
 }
 
 fn get_screen_dimensions() -> (f64, f64) {
@@ -57,49 +58,6 @@ fn get_screen_dimensions() -> (f64, f64) {
     }
 }
 
-lazy_static! {
-    static ref SCREEN_DIMENSIONS: (f64, f64) = get_screen_dimensions();
-}
-/*
-pub fn track_minus_sign(event: Event) {
-    let mut last_event = LAST_EVENT.lock().unwrap();
-    if *last_event == Some(event.event_type.clone()) {
-        return;
-    }
-    *last_event = Some(event.event_type.clone());
-
-    match event.event_type {
-        EventType::MouseMove { x, y } => {
-            *CURRENT_POSITION.lock().unwrap() = Some(Position { x, y });
-            println!("coordinate correnti: ({}, {})", x, y);
-        }
-        EventType::ButtonPress(Button::Left) => {
-            if let Some(position) = *CURRENT_POSITION.lock().unwrap() {
-                *START_POSITION.lock().unwrap() = Some(position);
-                *IS_DRAWING.lock().unwrap() = true;
-                println!("Inizio selezione: ({}, {})", position.x, position.y);
-            }
-        }
-        EventType::ButtonRelease(Button::Left) => {
-            if let Some(position) = *CURRENT_POSITION.lock().unwrap() {
-                *END_POSITION.lock().unwrap() = Some(position);
-                *IS_DRAWING.lock().unwrap() = false;
-                println!("Fine selezione: ({}, {})", position.x, position.y);
-
-                if let (Some(start), Some(end)) = (*START_POSITION.lock().unwrap(), *END_POSITION.lock().unwrap()) {
-                    if is_minus_sign(start.x, start.y, end.x, end.y) {
-                        println!("Segno meno tracciato correttamente!");
-                        play_sound();
-                    } else {
-                        println!("Il segno tracciato non è un meno.");
-                    }
-                }
-            }
-        }
-        _ => (),
-    }
-}
-*/
 
 // Funzione per tracciare il segno meno
 fn track_minus_sign(event: Event) {
@@ -112,7 +70,6 @@ fn track_minus_sign(event: Event) {
     match event.event_type {
         EventType::MouseMove { x, y } => {
             *CURRENT_POSITION.lock().unwrap() = Some(Position { x, y });
-            println!("Coordinate correnti monitorate manualmente: ({}, {})", x, y);
         }
         EventType::ButtonPress(Button::Left) => {
             let position = get_mouse_position();
