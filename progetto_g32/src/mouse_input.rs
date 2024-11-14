@@ -1,3 +1,4 @@
+use std::path::Path;
 // src/mouse_input.rs
 use rdev::{listen, Button, Event, EventType};
 use std::sync::{Arc, Mutex};
@@ -7,7 +8,7 @@ use lazy_static::lazy_static;
 use scrap::{Capturer, Display}; // Importa le librerie necessarie da scrap
 use crate::audio::play_sound;
 use device_query::{DeviceQuery, DeviceState, MouseState};
-
+use crate::backup::backup;
 
 #[derive(Debug, Copy, Clone)]
 struct Position {
@@ -96,6 +97,17 @@ fn track_minus_sign(event: Event) {
                 if is_minus_sign(start.x, start.y, position.x, position.y) {
                     println!("Segno meno tracciato correttamente!");
                     play_sound();
+
+                    // Definisco i percorsi di origine e destinazione
+                    let source = Path::new("/Users/matteopetrera/Desktop/POLITO/MAGISTRALE/23-24-2semestre/PDS/RUST/test-backup-dir");
+                    let destination = Path::new("/Users/matteopetrera/Desktop");
+                    let file_types = vec!["txt", "jpg", "png"]; // Specifichi i tipi di file
+
+                    // Chiama la funzione di backup
+                    match backup(source, destination, file_types) {
+                        Ok(_) => println!("Backup eseguito con successo!"),
+                        Err(e) => eprintln!("Errore durante il backup: {:?}", e),
+                    }
                 } else {
                     println!("Il segno tracciato non è un meno.");
                 }

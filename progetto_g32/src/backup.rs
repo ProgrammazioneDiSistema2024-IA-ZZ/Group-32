@@ -32,7 +32,7 @@ pub fn backup(source: &Path, destination: &Path, file_types: Vec<&str>) -> io::R
     }
 
     let duration = start_time.elapsed();
-    let log_file = File::create(destination.join("backup_log.txt"))?;
+    let mut log_file = File::create(destination.join("backup_log.txt"))?;
     writeln!(log_file, "Backup completed in {:?} with {} bytes copied.", duration, total_size)?;
     writeln!(log_file, "Total time spent on CPU: {:?}", duration)?;
 
