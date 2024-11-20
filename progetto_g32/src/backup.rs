@@ -1,6 +1,6 @@
-use std::fs::{self, DirEntry};
+use std::fs::{self};
 use std::path::Path;
-use std::time::{Instant, Duration};
+use std::time::{Instant};
 use std::io::{self, Write};
 use std::fs::File;
 

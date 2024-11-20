@@ -2,10 +2,11 @@ use std::path::Path;
 // src/mouse_input.rs
 use rdev::{listen, Button, Event, EventType};
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool};
 use std::thread;
 use std::time::Duration;
 use lazy_static::lazy_static;
-use scrap::{Capturer, Display}; // Importa le librerie necessarie da scrap
+use scrap::{Display}; // Importa le librerie necessarie da scrap
 use crate::audio::play_sound;
 use device_query::{DeviceQuery, DeviceState, MouseState};
 use crate::backup::backup;
@@ -42,6 +43,7 @@ lazy_static! {
     static ref IS_TRACKING_MINUS: Mutex<bool> = Mutex::new(false);
     static ref LAST_EVENT: Mutex<Option<EventType>> = Mutex::new(None);
     static ref SCREEN_DIMENSIONS: (f64, f64) = get_screen_dimensions();
+    static ref IS_RUNNING: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
 }
 
 fn get_screen_dimensions() -> (f64, f64) {
@@ -108,10 +110,10 @@ fn track_minus_sign(event: Event) {
                         Ok(_) => println!("Backup eseguito con successo!"),
                         Err(e) => eprintln!("Errore durante il backup: {:?}", e),
                     }
+                    std::process::exit(0);
                 } else {
                     println!("Il segno tracciato non è un meno.");
                 }
-
             }
         }
         _ => (),
@@ -139,7 +141,6 @@ fn handle_event(event: Event) {
     let (screen_width, screen_height) = *SCREEN_DIMENSIONS;
     let mut corners = CORNERS.lock().unwrap();
     let mut confirm_state = false;
-
     match event.event_type {
         EventType::MouseMove { x, y } => {
             let tolerance = 30.0; // Tolleranza per migliorare la precisione
