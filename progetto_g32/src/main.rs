@@ -5,6 +5,7 @@ mod backup;
 mod mouse_input;
 mod audio;
 mod cpu_logger;
+mod confirmation_window;
 
 fn main() {
 

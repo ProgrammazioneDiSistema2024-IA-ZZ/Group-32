@@ -3,6 +3,7 @@ use std::path::Path;
 use rdev::{listen, Button, Event, EventType};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::Duration;
 use lazy_static::lazy_static;
@@ -10,6 +11,7 @@ use scrap::{Display}; // Importa le librerie necessarie da scrap
 use crate::audio::play_sound;
 use device_query::{DeviceQuery, DeviceState, MouseState};
 use crate::backup::backup;
+use crate::confirmation_window;
 
 #[derive(Debug, Copy, Clone)]
 struct Position {
@@ -44,6 +46,8 @@ lazy_static! {
     static ref LAST_EVENT: Mutex<Option<EventType>> = Mutex::new(None);
     static ref SCREEN_DIMENSIONS: (f64, f64) = get_screen_dimensions();
     static ref IS_RUNNING: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
+    static ref CONFIRMATION_TX: Arc<Mutex<Option<Sender<()>>>> = Arc::new(Mutex::new(None));
+    static ref CONFIRMATION_RX: Mutex<Option<Receiver<()>>> = Mutex::new(None);
 }
 
 fn get_screen_dimensions() -> (f64, f64) {
@@ -179,6 +183,11 @@ fn handle_event(event: Event) {
     }
 
     if confirm_state {
+        let tx = CONFIRMATION_TX.lock().unwrap();
+        if let Some(tx) = &*tx {
+            // Invia il segnale per aprire la finestra di conferma
+            tx.send(()).unwrap();
+        }
         let mut is_tracking = IS_TRACKING_MINUS.lock().unwrap();
         if !*is_tracking {
             *is_tracking = true;
@@ -188,12 +197,38 @@ fn handle_event(event: Event) {
                 }).unwrap();
                 *IS_TRACKING_MINUS.lock().unwrap() = false;
             });
+
         }
     }
 }
 
+// Funzione per avviare il canale di conferma
+pub fn initialize_confirmation_channel() {
+    let (tx, rx) = channel();
+    *CONFIRMATION_TX.lock().unwrap() = Some(tx);
+    *CONFIRMATION_RX.lock().unwrap() = Some(rx);
+    println!("Canale di conferma inizializzato.");
+}
+
 pub fn main() {
-    if let Err(err) = listen(handle_event) {
-        eprintln!("Errore nell'ascolto degli eventi: {:?}", err);
-    }
+    // 1. Inizializza il canale di conferma
+    initialize_confirmation_channel();
+
+    // 2. Avvia il thread per gestire gli eventi del mouse
+    thread::spawn(|| {
+        if let Err(err) = listen(handle_event) {
+            eprintln!("Errore nell'ascolto degli eventi: {:?}", err);
+        }
+    });
+
+    // 3. Recupera il ricevitore globale
+    let rx = {
+        let rx = CONFIRMATION_RX.lock().unwrap().take();
+        rx.expect("Il ricevitore del canale non è stato inizializzato.")
+    };
+
+    // 4. Aspetta il segnale dal canale per aprire la finestra di conferma
+    // La finestra si apre solo dopo che la sequenza dei punti è completata
+    rx.recv().unwrap(); // Aspetta fino a ricevere il segnale
+    confirmation_window::run(rx);
 }

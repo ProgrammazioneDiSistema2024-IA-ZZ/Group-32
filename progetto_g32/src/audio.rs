@@ -1,12 +1,17 @@
 use rodio::{OutputStream, Sink};
 use std::fs::File;
 use std::io::BufReader;
+use std::path::PathBuf;
 
 pub fn play_sound() {
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let sink = Sink::try_new(&stream_handle).unwrap();
 
-    let file = BufReader::new(File::open("/Users/matteopetrera/Desktop/POLITO/MAGISTRALE/23-24-2semestre/PDS/RUST/Group-32/progetto_g32/audio_backup/audio.wav").unwrap());
+    // Usa la directory del progetto per costruire il percorso relativo
+    let mut audio_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    audio_path.push("audio_backup/audio.wav");
+
+    let file = BufReader::new(File::open(audio_path).unwrap());
     let source = rodio::Decoder::new(file).unwrap();
     sink.append(source);
 
