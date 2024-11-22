@@ -12,6 +12,8 @@ use crate::audio::{play_sound, play_sound2};
 use device_query::{DeviceQuery, DeviceState, MouseState};
 use crate::backup::backup;
 use crate::confirmation_window;
+use crate::main_configuration::{SOURCE_PATH, DESTINATION_PATH}; // Import delle variabili globali
+
 
 #[derive(Debug, Copy, Clone)]
 struct Position {
@@ -105,8 +107,8 @@ fn track_minus_sign(event: Event) {
                     play_sound();
 
                     // Definisco i percorsi di origine e destinazione
-                    let source = Path::new("/Users/gianlucamaida/Desktop/rrr/test-bb");
-                    let destination = Path::new("/Users/gianlucamaida/Desktop");
+                    let source = Path::new(&*SOURCE_PATH);
+                    let destination = Path::new(&*DESTINATION_PATH);
                     let file_types = vec!["txt", "jpg", "png"]; // Specifichi i tipi di file
 
                     // Chiama la funzione di backup

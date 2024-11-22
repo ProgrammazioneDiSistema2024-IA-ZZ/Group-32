@@ -1,6 +1,7 @@
 use std::path::Path;
 use std::sync::mpsc::Receiver;
 use crate::backup::backup;
+use crate::main_configuration::{SOURCE_PATH, DESTINATION_PATH}; // Import delle variabili globali
 
 pub fn run(rx: Receiver<()>) {
     let options = eframe::NativeOptions {
@@ -33,8 +34,8 @@ impl eframe::App for ConfirmationApp {
                 if ui.button("Conferma").clicked() {
                     println!("Backup confermato.");
                     // Definisco i percorsi di origine e destinazione
-                    let source = Path::new("/Users/matteopetrera/Desktop/POLITO/MAGISTRALE/23-24-2semestre/PDS/RUST/test-backup-dir");
-                    let destination = Path::new("/Users/matteopetrera/Desktop");
+                    let source = Path::new(&*SOURCE_PATH);
+                    let destination = Path::new(&*DESTINATION_PATH);
                     let file_types = vec!["txt", "jpg", "png"]; // Specifichi i tipi di file
 
                     // Chiama la funzione di backup
