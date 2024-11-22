@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sysinfo = "0.24.0"           # Per monitorare la CPU
+sysinfo = "0.32.0"           # Per monitorare la CPU
 chrono = "0.4"             # Per ottenere timestamp nel log
 lazy_static = "1.4"         # Per inizializzare variabili globali come le dimensioni dello schermo
 scrap = "0.5"
@@ -16,3 +16,6 @@ service-manager = "0.7.0"
 device_query = "0.2"
 eframe = "0.18.0"
 rfd = "0.12"
+
+[dependencies.ntapi]
+version = "0.4.1"

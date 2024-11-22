@@ -1,4 +1,4 @@
-use sysinfo::{System, SystemExt, ProcessExt};
+use sysinfo::{System};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::thread;
@@ -7,7 +7,7 @@ use chrono::Local;
 use sysinfo::Pid;
 
 pub fn log_cpu_usage() {
-    let mut system = System::new_all();
+    let system = System::new_all();
     let log_file_path = "cpu_usage_log.txt";
     let mut log_file = OpenOptions::new()
         .create(true)
@@ -19,10 +19,10 @@ pub fn log_cpu_usage() {
     let pid = std::process::id(); // Ottieni il PID del processo corrente
 
     loop {
-        system.refresh_processes(); // Rinfresca la lista dei processi
+        //system.refresh_processes(); // Rinfresca la lista dei processi
 
         // Converte il PID in un tipo Pid
-        let pid = Pid::from(pid as i32);
+        let pid = Pid::from(pid as usize);
 
         // Cerca il processo con il PID specificato nella mappa dei processi
         if let Some(process) = system.processes().get(&pid) {
