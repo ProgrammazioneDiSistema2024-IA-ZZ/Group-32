@@ -6,6 +6,8 @@ mod mouse_input;
 mod audio;
 mod cpu_logger;
 mod confirmation_window;
+mod configuration_window;
+mod main_configuration;
 
 fn main() {
 
@@ -14,7 +16,7 @@ fn main() {
     });
 
     println!("avvio programma!");
-    mouse_input::main();
+    main_configuration::main();
 
     // Attende la terminazione del thread di logging (se necessario)
     log_thread.join().expect("Errore nel thread di logging");
