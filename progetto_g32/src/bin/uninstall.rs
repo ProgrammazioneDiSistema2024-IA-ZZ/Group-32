@@ -9,7 +9,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to detect management platform");
 
     // Percorso dell'eseguibile (modifica il percorso per il tuo sistema)
-    let executable_path = "/Users/matteopetrera/Desktop/POLITO/MAGISTRALE/23-24-2semestre/PDS/RUST/Group-32/target/release/progetto_g32";
+    let _executable_path = "/Users/matteopetrera/Desktop/POLITO/MAGISTRALE/23-24-2semestre/PDS/RUST/Group-32/target/release/progetto_g32";
 
     // Ferma il servizio
     manager.stop(ServiceStopCtx {
