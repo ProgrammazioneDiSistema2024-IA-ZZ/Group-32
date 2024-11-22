@@ -8,7 +8,7 @@ use std::thread;
 use std::time::Duration;
 use lazy_static::lazy_static;
 use scrap::{Display}; // Importa le librerie necessarie da scrap
-use crate::audio::play_sound;
+use crate::audio::{play_sound, play_sound2};
 use device_query::{DeviceQuery, DeviceState, MouseState};
 use crate::backup::backup;
 use crate::confirmation_window;
@@ -105,13 +105,13 @@ fn track_minus_sign(event: Event) {
                     play_sound();
 
                     // Definisco i percorsi di origine e destinazione
-                    let source = Path::new("/Users/matteopetrera/Desktop/POLITO/MAGISTRALE/23-24-2semestre/PDS/RUST/test-backup-dir");
-                    let destination = Path::new("/Users/matteopetrera/Desktop");
+                    let source = Path::new("/Users/gianlucamaida/Desktop/rrr/test-bb");
+                    let destination = Path::new("/Users/gianlucamaida/Desktop");
                     let file_types = vec!["txt", "jpg", "png"]; // Specifichi i tipi di file
 
                     // Chiama la funzione di backup
                     match backup(source, destination, file_types) {
-                        Ok(_) => println!("Backup eseguito con successo!"),
+                        Ok(_) => {println!("Backup eseguito con successo!"); play_sound2();},
                         Err(e) => eprintln!("Errore durante il backup: {:?}", e),
                     }
                     std::process::exit(0);
