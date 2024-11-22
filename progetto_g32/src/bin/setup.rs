@@ -11,8 +11,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let manager = <dyn ServiceManager>::native()
         .expect("Failed to detect management platform");
 
-    // Percorso dell'eseguibile (modifica il percorso per il tuo sistema)
-    let executable_path = "/Users/matteopetrera/Desktop/POLITO/MAGISTRALE/23-24-2semestre/PDS/RUST/Group-32/target/release/progetto_g32";
+    // Costruisci il percorso relativo per l'eseguibile
+    let mut executable_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    executable_path.push("target/release/progetto_g32"); // Aggiungi il percorso relativo
 
     // Installa il servizio
     manager.install(ServiceInstallCtx {
