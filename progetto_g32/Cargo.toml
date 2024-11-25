@@ -12,10 +12,10 @@ lazy_static = "1.4"         # Per inizializzare variabili globali come le dimens
 scrap = "0.5"
 rdev = "0.4"
 rodio = "0.14.0"
-service-manager = "0.7.0"
 device_query = "0.2"
 eframe = "0.18.0"
 rfd = "0.12"
+auto-launch = "0.5.0"
 
 [dependencies.ntapi]
 version = "0.4.1"
