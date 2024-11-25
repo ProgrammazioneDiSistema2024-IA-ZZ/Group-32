@@ -11,6 +11,10 @@ mod confirmation_window;
 mod configuration_window;
 mod main_configuration;
 
+mod bin {
+    mod setup;
+}
+
 
 fn main() {
 
