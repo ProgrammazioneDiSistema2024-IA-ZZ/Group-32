@@ -1,3 +1,4 @@
+use std::env;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::path::PathBuf;
@@ -45,7 +46,11 @@ pub fn main_configuration() {
         } else {
             println!("Il file è vuoto o non contiene righe di testo.");
             //run_configuration_window();
-            Command::new("./target/release/setup")
+            let exe = env::current_exe().unwrap(); // exe path
+            let wd = exe.parent().unwrap();
+
+            let program_path = wd.join("setup");
+            Command::new(program_path)
                 .output()
                 .expect("Errore durante l'esecuzione del programma di configurazione.");
         }
