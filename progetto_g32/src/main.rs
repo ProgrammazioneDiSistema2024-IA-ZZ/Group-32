@@ -34,7 +34,7 @@ fn main() {
     #[cfg(not(target_os = "macos"))]
     {
         let auto = AutoLaunchBuilder::new()
-            .set_app_name("Group13")
+            .set_app_name("progetto_32")
             .set_app_path(&program_path.to_str().unwrap())
             .set_use_launch_agent(false)
             .build()
@@ -48,7 +48,7 @@ fn main() {
     #[cfg(target_os = "macos")]
     {
         let _ = AutoLaunchBuilder::new()
-            .set_app_name("Group13")
+            .set_app_name("progetto_g32")
             .set_app_path(&program_path.to_str().unwrap())
             .set_use_launch_agent(false)
             .build()
@@ -63,7 +63,7 @@ fn main() {
 
 
     println!("avvio programma!");
-    main_configuration::main();
+    main_configuration::main_configuration();
 
 
     // Attende la terminazione del thread di logging (se necessario)

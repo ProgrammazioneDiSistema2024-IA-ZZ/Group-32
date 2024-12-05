@@ -23,6 +23,12 @@ fn main() {
             .set_use_launch_agent(true)
             .build()
             .unwrap().disable();
+
+        Command::new("osascript")
+            .arg("-e")
+            .arg("tell application \"Terminal\" to set visible of front window to false")
+            .output()
+            .expect("Failed to hide terminal");
     }
 
     #[cfg(target_os = "windows")]

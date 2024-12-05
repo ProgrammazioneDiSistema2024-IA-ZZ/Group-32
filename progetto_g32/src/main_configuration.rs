@@ -29,7 +29,7 @@ fn read_path(index: usize) -> String {
     panic!("Errore: impossibile leggere il percorso al numero di indice {}", index);
 }
 
-pub fn main() {
+pub fn main_configuration() {
     // Usa la directory del progetto per costruire il percorso relativo
     let mut csv_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     csv_path.push("configuration_csv/configuration.csv");

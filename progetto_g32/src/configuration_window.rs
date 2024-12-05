@@ -1,8 +1,10 @@
+use crate::main;
 use eframe::egui;
 use rfd::FileDialog;
 use std::fs::{OpenOptions};
 use std::io::{Write};
 use std::path::PathBuf;
+use crate::main_configuration;
 
 pub fn run_configuration_window() {
     let options = eframe::NativeOptions {
@@ -68,7 +70,7 @@ impl eframe::App for ConfigurationApp {
             ui.separator();
 
             // Pulsante Installa
-            if ui.button("Installa").clicked() {
+            if ui.button("Salva").clicked() {
                 if let (Some(source), Some(destination)) = (&self.source_path, &self.destination_path) {
                     println!("Setup completato con i seguenti percorsi:");
                     println!("Sorgente: {}", source);
@@ -79,6 +81,7 @@ impl eframe::App for ConfigurationApp {
                         eprintln!("Errore nel salvataggio del file CSV: {}", e);
                     } else {
                         println!("Percorsi salvati con successo in backup_config.csv");
+                        main_configuration::main_configuration();
                     }
                 } else {
                     println!("Errore: seleziona entrambi i percorsi prima di continuare.");
@@ -100,7 +103,8 @@ fn save_to_csv(source: &str, destination: &str) -> std::io::Result<()> {
         .write(true)
         .append(true)
         .open(&csv_path)?;
-
+    // Se ci sono linee già scritte sul file eliminale
+    file.set_len(0)?;
     // Scrivi i dati sul file
     writeln!(file, "{},{}", source, destination)?;
 
