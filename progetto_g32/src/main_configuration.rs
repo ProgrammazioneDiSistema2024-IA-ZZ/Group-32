@@ -1,6 +1,7 @@
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::path::PathBuf;
+use std::process::Command;
 use lazy_static::lazy_static;
 use crate::configuration_window::run_configuration_window;
 use crate::{mouse_input};
@@ -43,7 +44,10 @@ pub fn main_configuration() {
             mouse_input::main();
         } else {
             println!("Il file è vuoto o non contiene righe di testo.");
-            run_configuration_window();
+            //run_configuration_window();
+            Command::new("./target/release/setup")
+                .output()
+                .expect("Errore durante l'esecuzione del programma di configurazione.");
         }
     } else {
         println!("Impossibile aprire il file.");

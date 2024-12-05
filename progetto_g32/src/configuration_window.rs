@@ -104,7 +104,6 @@ fn save_to_csv(source: &str, destination: &str) -> std::io::Result<()> {
         .append(true)
         .open(&csv_path)?;
     // Se ci sono linee già scritte sul file eliminale
-    file.set_len(0)?;
     // Scrivi i dati sul file
     writeln!(file, "{},{}", source, destination)?;
 
