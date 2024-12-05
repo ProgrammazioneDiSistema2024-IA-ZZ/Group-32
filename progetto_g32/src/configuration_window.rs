@@ -4,14 +4,11 @@ use rfd::FileDialog;
 use std::fs::{OpenOptions};
 use std::io::{Write};
 use std::path::PathBuf;
+use eframe::egui::ViewportCommand;
 use crate::main_configuration;
 
 pub fn run_configuration_window() {
-    let options = eframe::NativeOptions {
-        initial_window_size: Some(eframe::emath::Vec2::new(500.0, 400.0)), // Dimensione iniziale
-        min_window_size: Some(eframe::emath::Vec2::new(400.0, 300.0)), // Dimensione minima
-        ..Default::default()
-    };
+    let options = eframe::NativeOptions::default();
 
     eframe::run_native(
         "Configurazione Backup",
@@ -81,6 +78,7 @@ impl eframe::App for ConfigurationApp {
                         eprintln!("Errore nel salvataggio del file CSV: {}", e);
                     } else {
                         println!("Percorsi salvati con successo in backup_config.csv");
+                        ctx.send_viewport_cmd(ViewportCommand::Close);
                         main_configuration::main_configuration();
                     }
                 } else {

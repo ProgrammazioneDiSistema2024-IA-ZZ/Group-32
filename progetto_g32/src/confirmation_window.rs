@@ -4,12 +4,7 @@ use crate::backup::backup;
 use crate::main_configuration::{SOURCE_PATH, DESTINATION_PATH}; // Import delle variabili globali
 
 pub fn run(rx: Receiver<()>) {
-    let options = eframe::NativeOptions {
-        initial_window_size: Some(eframe::emath::Vec2::new(400.0, 300.0)), // Imposta la dimensione iniziale della finestra
-        min_window_size: Some(eframe::emath::Vec2::new(300.0, 200.0)), // Imposta una dimensione minima
-        max_window_size: Some(eframe::emath::Vec2::new(800.0, 600.0)), // Imposta una dimensione massima
-        ..Default::default()
-    };
+    let options = eframe::NativeOptions::default();
 
     eframe::run_native(
         "Conferma Backup",

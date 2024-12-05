@@ -45,14 +45,7 @@ pub fn main_configuration() {
             mouse_input::main();
         } else {
             println!("Il file è vuoto o non contiene righe di testo.");
-            //run_configuration_window();
-            let exe = env::current_exe().unwrap(); // exe path
-            let wd = exe.parent().unwrap();
-
-            let program_path = wd.join("setup");
-            Command::new(program_path)
-                .output()
-                .expect("Errore durante l'esecuzione del programma di configurazione.");
+            run_configuration_window();
         }
     } else {
         println!("Impossibile aprire il file.");
