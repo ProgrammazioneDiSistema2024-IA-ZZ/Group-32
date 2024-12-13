@@ -80,7 +80,6 @@ impl eframe::App for ConfigurationApp {
                     } else {
                         println!("Percorsi salvati con successo in backup_config.csv");
                         ctx.send_viewport_cmd(ViewportCommand::Close);
-                        //mouse_input::main();
                     }
                 } else {
                     println!("Errore: seleziona entrambi i percorsi prima di continuare.");

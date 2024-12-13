@@ -34,35 +34,51 @@ fn read_path(index: usize) -> String {
 }
 
 pub fn main_configuration() {
-    // Usa la directory del progetto per costruire il percorso relativo
-    let mut csv_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    csv_path.push("configuration_csv/configuration.csv");
+  // Usa la directory del progetto per costruire il percorso relativo
+  let mut csv_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+  csv_path.push("configuration_csv/configuration.csv");
 
-    // Controlla se ci sono righe di testo nel file
-    if let Ok(file) = File::open(csv_path) {
-        let reader = BufReader::new(file);
-        let has_lines = reader.lines().next().is_some();
+  // Controlla se ci sono righe di testo nel file
+  if let Ok(file) = File::open(&csv_path) {
+      let reader = BufReader::new(file);
+      let has_lines = reader.lines().next().is_some();
 
-        if has_lines {
-            mouse_input::main();
-        } else {
-            println!("Il file è vuoto o non contiene righe di testo.");
-            let exe = env::current_exe().unwrap(); // exe path
-            let wd = exe.parent().unwrap();
-            let program_path = wd.join("setup");
+      if has_lines {
+          // I percorsi sono già configurati, avvia il modulo principale
+          mouse_input::main();
+      } else {
+          println!("Il file è vuoto o non contiene righe di testo.");
+          let exe = env::current_exe().unwrap(); // exe path
+          let wd = exe.parent().unwrap();
+          let program_path = wd.join("setup");
 
-            let child = Command::new(program_path)
-                .spawn()
-                .expect("Errore durante l'avvio del programma di configurazione");
+          let mut child = Command::new(program_path)
+              .spawn()
+              .expect("Errore durante l'avvio del programma di configurazione");
 
-            println!("Pid del child: {}", child.id());
-            {
-                let mut child_id_lock = CHILD_PROCESS_ID.lock().unwrap();
-                *child_id_lock = child.id();
-            }
+          println!("Pid del child: {}", child.id());
+          {
+              let mut child_id_lock = CHILD_PROCESS_ID.lock().unwrap();
+              *child_id_lock = child.id();
+          }
 
-        }
-    } else {
-        println!("Impossibile aprire il file.");
-    }
+          // Aspetta la terminazione del processo figlio
+          let _ = child.wait().expect("Errore durante l'attesa del processo figlio");
+
+          // Riapri il file CSV e verifica se ora contiene dati validi
+          if let Ok(file) = File::open(csv_path) {
+              let reader = BufReader::new(file);
+              if reader.lines().next().is_some() {
+                  println!("File di configurazione aggiornato. Avvio del programma principale...");
+                  mouse_input::main();
+              } else {
+                  eprintln!("Errore: il file di configurazione non è stato aggiornato correttamente.");
+              }
+          } else {
+              eprintln!("Errore: impossibile aprire il file di configurazione dopo il setup.");
+          }
+      }
+  } else {
+      println!("Impossibile aprire il file.");
+  }
 }
