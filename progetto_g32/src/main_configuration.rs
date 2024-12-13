@@ -1,16 +1,18 @@
 use std::env;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
+use std::ops::Deref;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::Mutex;
 use lazy_static::lazy_static;
-use crate::configuration_window::run_configuration_window;
 use crate::{mouse_input};
 
 // Variabili globali per i percorsi
 lazy_static! {
     pub static ref SOURCE_PATH: String = read_path(0);
     pub static ref DESTINATION_PATH: String = read_path(1);
+    pub static ref CHILD_PROCESS_ID: Mutex<u32> = Mutex::new(0);
 }
 
 fn read_path(index: usize) -> String {
@@ -45,7 +47,20 @@ pub fn main_configuration() {
             mouse_input::main();
         } else {
             println!("Il file è vuoto o non contiene righe di testo.");
-            run_configuration_window();
+            let exe = env::current_exe().unwrap(); // exe path
+            let wd = exe.parent().unwrap();
+            let program_path = wd.join("setup");
+
+            let child = Command::new(program_path)
+                .spawn()
+                .expect("Errore durante l'avvio del programma di configurazione");
+
+            println!("Pid del child: {}", child.id());
+            {
+                let mut child_id_lock = CHILD_PROCESS_ID.lock().unwrap();
+                *child_id_lock = child.id();
+            }
+
         }
     } else {
         println!("Impossibile aprire il file.");

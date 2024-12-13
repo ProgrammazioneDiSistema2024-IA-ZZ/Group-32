@@ -10,7 +10,7 @@ pub fn run(rx: Receiver<()>) {
         "Conferma Backup",
         options,
         Box::new(move |_cc| Box::new(ConfirmationApp { rx })),
-    );
+    ).expect("TODO: panic message");
 }
 
 struct ConfirmationApp {

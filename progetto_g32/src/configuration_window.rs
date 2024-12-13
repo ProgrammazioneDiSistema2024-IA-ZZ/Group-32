@@ -1,11 +1,12 @@
-use crate::main;
+use crate::{main, mouse_input};
 use eframe::egui;
 use rfd::FileDialog;
 use std::fs::{OpenOptions};
 use std::io::{Write};
 use std::path::PathBuf;
-use eframe::egui::ViewportCommand;
-use crate::main_configuration;
+use std::process;
+use eframe::egui::{Align, Layout, ViewportCommand};
+use crate::main_configuration::CHILD_PROCESS_ID;
 
 pub fn run_configuration_window() {
     let options = eframe::NativeOptions::default();
@@ -14,7 +15,7 @@ pub fn run_configuration_window() {
         "Configurazione Backup",
         options,
         Box::new(|_cc| Box::new(ConfigurationApp::default())),
-    );
+    ).expect("TODO: panic message");
 }
 
 struct ConfigurationApp {
@@ -79,7 +80,7 @@ impl eframe::App for ConfigurationApp {
                     } else {
                         println!("Percorsi salvati con successo in backup_config.csv");
                         ctx.send_viewport_cmd(ViewportCommand::Close);
-                        main_configuration::main_configuration();
+                        //mouse_input::main();
                     }
                 } else {
                     println!("Errore: seleziona entrambi i percorsi prima di continuare.");
