@@ -2,3 +2,5 @@
 target/
 
 configuration_csv/
+
+.idea/
