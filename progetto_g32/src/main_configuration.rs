@@ -16,21 +16,25 @@ lazy_static! {
 }
 
 fn read_path(index: usize) -> String {
-    // Usa la directory del progetto per costruire il percorso relativo
+    // Use the project directory to build the relative path
     let mut csv_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     csv_path.push("configuration_csv/configuration.csv");
 
     if let Ok(file) = File::open(csv_path) {
         let reader = BufReader::new(file);
-        if let Some(Ok(line)) = reader.lines().next() {
-            let paths: Vec<&str> = line.split(',').collect();
-            if index < paths.len() {
-                return paths[index].trim().to_string();
+        let mut last_line = String::new();
+        for line in reader.lines() {
+            if let Ok(l) = line {
+                last_line = l;
             }
+        }
+        let paths: Vec<&str> = last_line.split(',').collect();
+        if index < paths.len() {
+            return paths[index].trim().to_string();
         }
     }
 
-    panic!("Errore: impossibile leggere il percorso al numero di indice {}", index);
+    panic!("Error: unable to read the path at index number {}", index);
 }
 
 pub fn main_configuration() {
