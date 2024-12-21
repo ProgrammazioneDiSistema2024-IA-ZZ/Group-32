@@ -8,12 +8,15 @@ fn main() {
     let wd = exe.parent().unwrap();
     let app_path = wd.join("progetto_g32");
 
-    let _ = AutoLaunchBuilder::new()
-        .set_app_name("Backup di Emergenza")
-        .set_app_path(&app_path.to_str().unwrap())
-        .set_use_launch_agent(false)
-        .build()
-        .unwrap().disable();
+    #[cfg(not(target_os = "macos"))]
+    {
+      let _ = AutoLaunchBuilder::new()
+          .set_app_name("Backup di Emergenza")
+          .set_app_path(&app_path.to_str().unwrap())
+          .set_use_launch_agent(false)
+          .build()
+          .unwrap().disable();
+    }
 
     #[cfg(target_os = "macos")]
     {
