@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use std::process::Command;
 use std::{env, thread};
 use crate::cpu_logger::log_cpu_usage;
