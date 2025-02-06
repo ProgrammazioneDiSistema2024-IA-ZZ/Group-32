@@ -71,19 +71,19 @@ target/release/uninstall
 |-- configuration_csv/
 |-- src/
 |   |-- bin/
-|   |-- main.rs       # Punto di ingresso dell'applicazione
+|   |-- main.rs                     # Punto di ingresso dell'applicazione
 |   |-- main_configuration.rs       # Controlli all'avvio dell'applicazione
-|   |-- mouse_input.rs       # Gestione degli input del mouse
-|   |-- backup.rs     # Funzioni per la copia dei file
-|   |-- cpu_logger.rs # Gestione del file di log
-|   |-- audio.rs      # Riproduzione del suono di conferma
+|   |-- mouse_input.rs              # Gestione degli input del mouse
+|   |-- backup.rs                   # Funzioni per la copia dei file
+|   |-- cpu_logger.rs               # Gestione del file di log
+|   |-- audio.rs                    # Riproduzione del suono di conferma
 |   |-- lib.rs
-|   |-- confirmation_window.rs         # Finestra di conferma
-|   |-- configuration_window.rs         # Finestra di configurazione/setup
-|-- Cargo.toml        # File di configurazione di Rust
-|-- cpu_usage_log.txt # File contenente le stampe con il logging della CPU
-|-- lin_build.sh      # Per creare in automatico la release per Linux
-|-- macos_build.sh    # Per creare in automatico la release per MacOs
+|   |-- confirmation_window.rs      # Finestra di conferma
+|   |-- configuration_window.rs     # Finestra di configurazione/setup
+|-- Cargo.toml                      # File di configurazione di Rust
+|-- cpu_usage_log.txt               # File contenente le stampe con il logging della CPU
+|-- lin_build.sh                    # Per creare in automatico la release per Linux
+|-- macos_build.sh                  # Per creare in automatico la release per MacOs
 |-- windows_build.bat # Per creare in automatico la release per Windows
 ```
 
