@@ -84,7 +84,7 @@ target/release/uninstall
 |-- cpu_usage_log.txt               # File contenente le stampe con il logging della CPU
 |-- lin_build.sh                    # Per creare in automatico la release per Linux
 |-- macos_build.sh                  # Per creare in automatico la release per MacOs
-|-- windows_build.bat # Per creare in automatico la release per Windows
+|-- windows_build.bat               # Per creare in automatico la release per Windows
 ```
 
 ## Dipendenze Utilizzate
