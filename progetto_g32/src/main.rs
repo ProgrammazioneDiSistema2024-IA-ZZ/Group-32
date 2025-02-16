@@ -26,7 +26,6 @@ fn main() {
 
     let exe = env::current_exe().unwrap(); // exe path
     let wd = exe.parent().unwrap();
-    // println!("{}", wd);
 
     /* Autostart configuration */
     let program_path = wd.join("progetto_g32");

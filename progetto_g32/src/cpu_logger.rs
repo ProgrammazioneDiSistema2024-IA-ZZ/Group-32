@@ -1,7 +1,7 @@
 use sysinfo::{ProcessesToUpdate, System};
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::thread;
+use std::{env, thread};
 use std::time::Duration;
 use chrono::Local;
 use sysinfo::Pid;
@@ -9,10 +9,16 @@ use sysinfo::Pid;
 pub fn log_cpu_usage() {
     let mut system = System::new_all();
     let log_file_path = "cpu_usage_log.txt";
+
+    let exe = env::current_exe().unwrap(); // exe path
+    let wd = exe.parent().unwrap().parent().unwrap().parent().unwrap();
+    let path = wd.join(log_file_path);
+    println!("{:?}", path);
+
     let mut log_file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(log_file_path)
+        .open(path)
         .expect("Errore nell'apertura del file di log");
 
     // Ottieni il PID del processo corrente
